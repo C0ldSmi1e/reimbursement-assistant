@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ImageData, ImageInfo } from "~/types";
 
+const MAX_RETRIES = 5;
+
 const prompt = `
   You will be provided a receipt, please read it and answer the following questions:
   1. What is the date of this transaction?
@@ -44,13 +46,21 @@ const useGemini = (GEMINI_API_KEY: string) => {
       }
     };
 
-    try {
-      const res = await model.generateContent([prompt, imagePart]);
-      const text = res.response.text();
-      parseImageInfo(text);
-    } catch (error) {
-      console.error("Error generating content:", error);
-    } 
+    let retries = 0;
+
+    while (retries < MAX_RETRIES) {
+      try {
+        const res = await model.generateContent([prompt, imagePart]);
+        const text = res.response.text();
+        parseImageInfo(text);
+        if (imageInfo.message !== "error") {
+          break;
+        }
+      } catch (error) {
+        console.error("Error generating content:", error);
+      }
+      retries++;
+    }
   };
 
   const parseImageInfo = (text: string) => {
