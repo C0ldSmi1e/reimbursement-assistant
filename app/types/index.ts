@@ -3,4 +3,11 @@ interface ImageData {
   mimeType: string;
 }
 
-export type { ImageData };
+interface ImageInfo {
+  message?: string;
+  date?: string;
+  item?: string;
+  amount?: string;
+}
+
+export type { ImageData, ImageInfo };
