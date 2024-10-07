@@ -101,11 +101,11 @@ export const action: ActionFunction = async ({ request }) => {
       };
 
       // Convert base64 to buffer
-      const buffer = Buffer.from(base64 as string, 'base64');
+      const buffer = Buffer.from(base64.split(',')[1], 'base64');
 
       // Create a readable stream from the buffer
       const readable = new Readable();
-      readable._read = () => {}; // _read is required but you can noop it
+      readable._read = () => {};
       readable.push(buffer);
       readable.push(null);
 
