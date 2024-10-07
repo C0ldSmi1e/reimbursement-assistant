@@ -52,7 +52,7 @@ const useGemini = (GEMINI_API_KEY: string) => {
       try {
         const res = await model.generateContent([prompt, imagePart]);
         const text = res.response.text();
-        parseImageInfo(text);
+        await parseImageInfo(text);
         if (imageInfo.message !== "error") {
           break;
         }
@@ -63,7 +63,7 @@ const useGemini = (GEMINI_API_KEY: string) => {
     }
   };
 
-  const parseImageInfo = (text: string) => {
+  const parseImageInfo = async (text: string) => {
     if (text.includes("error")) {
       setImageInfo({ message: text });
     } else {

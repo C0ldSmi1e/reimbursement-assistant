@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ImageInfo } from "~/types";
 
 const ImageResult: React.FC<{ imageInfo: ImageInfo }> = ({ imageInfo }: { imageInfo: ImageInfo }) => {
-  const [date, setDate] = useState(imageInfo.date);
-  const [item, setItem] = useState(imageInfo.item);
-  const [amount, setAmount] = useState(imageInfo.amount);
+  const [message, setMessage] = useState(imageInfo.message || "");
+  const [date, setDate] = useState(imageInfo.date || "");
+  const [item, setItem] = useState(imageInfo.item || "");
+  const [amount, setAmount] = useState(imageInfo.amount || "");
+
+  useEffect(() => {
+    setMessage(imageInfo.message || "");
+    setDate(imageInfo.date || "");
+    setItem(imageInfo.item || "");
+    setAmount(imageInfo.amount || "");
+  }, [imageInfo]);
+
+  if (message.includes("error")) {
+    return (<div className="mt-4 flex flex-col gap-4">
+      Error
+    </div>);
+  }
 
   return (
     <div className="mt-4 flex flex-col gap-4">
