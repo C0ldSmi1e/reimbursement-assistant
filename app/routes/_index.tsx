@@ -12,6 +12,7 @@ import { getGoogleAuthUrl } from "~/utils/googleAuth.server";
 import { craftFilename, findOrCreateFolder } from "~/utils/googleDrive.server";
 import { destroySession, getSession } from "~/utils/session.server";
 import { Readable } from 'stream';
+import InfoBar from "~/components/InfoBar";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request.headers.get("Cookie"));
@@ -166,8 +167,6 @@ const Index = () => {
     await onAnalyzeImage(imageData);
   }
 
-
-
   const onSave = async () => {
     if (!imageData || !imageInfo || !imageInfo.message || imageInfo.message === "error") {
       console.error("No image uploaded");
@@ -179,20 +178,25 @@ const Index = () => {
       return;
     }
 
-    submit({ upload: "true",
-      base64: imageData.base64 as string,
-      mimeType: imageData.mimeType as string,
-      message: imageInfo.message as string,
-      date: imageInfo.date as string,
-      item: imageInfo.item as string,
-      amount: imageInfo.amount as string
-    }, { method: "post" });
+    try {
+      submit({
+        upload: "true",
+        base64: imageData.base64 as string,
+        mimeType: imageData.mimeType as string,
+        message: imageInfo.message as string,
+        date: imageInfo.date as string,
+        item: imageInfo.item as string,
+        amount: imageInfo.amount as string
+      }, { method: "post" });
+    } catch (error) {
+      console.error("Error saving file:", error);
+    }
   }
 
   if (!isLoggedIn) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <a href={googleAuthUrl} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <a href={googleAuthUrl} className="border-2 border-black rounded-md px-4 py-2">
           Login with Google
         </a>
       </div>
@@ -204,22 +208,28 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-around gap-4">
-      <div>
-        <p>Welcome, {user?.name}!</p>
-        <p>Email: {user?.email}</p>
-        <button onClick={onLogout}>Logout</button>
-      </div>
-      <div className="flex flex-col items-center justify-center">
-        <ImageUploader onUpload={uploadImage} />
-        <div className="mt-4 w-96">
-          {imageData && <ImagePreview imageData={imageData} />}
+    <div className="w-full flex flex-col items-center justify-around gap-4 p-4">
+      <InfoBar name={user?.name} email={user?.email} onLogout={onLogout} />
+      <div className="w-full flex flex-col md:flex-row items-start justify-around gap-8">
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center gap-4">
+          <ImageUploader onUpload={uploadImage} />
+          <ImagePreview imageData={imageData} />
         </div>
-      </div>
-      <div className="flex flex-col items-start justify-center">
-        <button onClick={onSubmit}>Get Data</button>
-        <ImageResult imageInfo={imageInfo} />
-        <button onClick={onSave}>Save</button>
+        <div className="w-full md:w-1/2 flex flex-col items-start justify-center gap-4">
+          <div className="flex gap-4 items-center">
+            <p className="font-bold">
+              👉🏻 Step 2:
+            </p>
+            <button className="border-2 border-black rounded-md px-4 py-2" onClick={onSubmit}>Scan</button>
+          </div>
+          <ImageResult imageInfo={imageInfo} />
+          <div className="flex gap-4 items-center">
+            <p className="font-bold">
+              👉🏻 Step 3:
+            </p>
+            <button className="border-2 border-black rounded-md px-4 py-2" onClick={onSave}>Save</button>
+          </div>
+        </div>
       </div>
     </div>
   );

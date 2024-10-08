@@ -15,7 +15,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload }) => {
   };
 
   return (
-    <div>
+    <div className="w-full">
       <input
         type="file"
         accept="image/png, image/jpeg, image/webp, image/heic, image/heif"
@@ -23,9 +23,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload }) => {
         ref={fileInputRef}
         style={{ display: 'none' }}
       />
-      <button onClick={() => fileInputRef.current?.click()}>
-        Upload Image
-      </button>
+      <div className="flex gap-4 items-center">
+        <p className="font-bold">
+          👉🏻 Step 1:
+        </p>
+        <button className="border-2 border-black rounded-md px-4 py-2" onClick={() => fileInputRef.current?.click()}>
+          Upload Image
+        </button>
+      </div>
     </div>
   );
 };

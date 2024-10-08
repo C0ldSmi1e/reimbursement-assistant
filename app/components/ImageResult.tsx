@@ -21,18 +21,39 @@ const ImageResult: React.FC<{ imageInfo: ImageInfo }> = ({ imageInfo }: { imageI
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
-      <div className="flex gap-2">
-        <label htmlFor="date">Date</label>
-        <input id="date" name="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-4 items-center">
+        <label className="w-16" htmlFor="date">Date:</label>
+        <input
+          className="w-64 border-2 border-black rounded-md p-1"
+          id="date"
+          name="date"
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
       </div>
-      <div className="flex gap-2">
-        <label htmlFor="item">Item</label>
-        <input id="item" name="item" type="text" value={item} onChange={(e) => setItem(e.target.value)} />
+      <div className="flex gap-4 items-center">
+        <label className="w-16" htmlFor="item">Item:</label>
+        <input
+          className="w-64 border-2 border-black rounded-md p-1"
+          id="item"
+          name="item"
+          type="text"
+          value={item}
+          onChange={(e) => setItem(e.target.value)}
+        />
       </div>
-      <div className="flex gap-2">
-        <label htmlFor="amount">Amount</label>
-        <input id="amount" name="amount" type="text" value={amount} onChange={(e) => setAmount(e.target.value)} />
+      <div className="flex gap-4 items-center">
+        <label className="w-16" htmlFor="amount">Amount:</label>
+        <input
+          className="w-64 border-2 border-black rounded-md p-1"
+          id="amount"
+          name="amount"
+          type="text"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
       </div>
     </div>
   );
