@@ -9,7 +9,7 @@ import useGemini from "~/hooks/useGemini";
 import { google } from 'googleapis';
 import ImageResult from "~/components/ImageResult";
 import { getGoogleAuthUrl } from "~/utils/googleAuth.server";
-import { craftFilename, findOrCreateFolder } from "~/utils/googleDrive.server";
+import { checkSheet, craftFilename, findOrCreateFolder, findOrCreateSheet, appendNewItemToSheet } from "~/utils/googleDrive.server";
 import { destroySession, getSession } from "~/utils/session.server";
 import { Readable } from 'stream';
 import InfoBar from "~/components/InfoBar";
@@ -86,10 +86,11 @@ export const action: ActionFunction = async ({ request }) => {
       });
 
       const driveClient = google.drive({ version: 'v3', auth: oauth2Client });
+      const sheetsClient = google.sheets({ version: 'v4', auth: oauth2Client });
 
       const dateObj = new Date(date);
       const folderName = `reimbursement-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}-${dateObj.getFullYear()}`;
-      const folderId = await findOrCreateFolder(driveClient, folderName);
+      const folderId = await findOrCreateFolder({ driveClient, folderName });
       if (!folderId) {
         return json({ success: false, error: "Failed to find or create folder" });
       }
@@ -120,6 +121,18 @@ export const action: ActionFunction = async ({ request }) => {
         fields: 'id',
       });
 
+      // Create or update the sheet
+      const sheetName = `reimbursement-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}-${dateObj.getFullYear()}`;
+      const sheetId = await findOrCreateSheet({ driveClient, folderId, sheetName });
+
+      if (!sheetId) {
+        return json({ success: false, error: "Failed to find or create sheet" });
+      }
+
+      await checkSheet({ sheetsClient, sheetId });
+
+      await appendNewItemToSheet({ sheetsClient, sheetId, date, item, amount });
+
       console.log('File uploaded successfully. File ID:', response.data.id);
       return json({ success: true, fileId: response.data.id });
     } catch (error) {
@@ -146,8 +159,9 @@ const Index = () => {
   }>();
   const submit = useSubmit();
   const { uploadImage, imageData } = useImageUpload();
-  const { onAnalyzeImage, imageInfo, isScanning } = useGemini(GEMINI_API_KEY);
+  const { onAnalyzeImage, imageInfo, setImageInfo, isScanning } = useGemini(GEMINI_API_KEY);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const actionData = useActionData<{ success: boolean; error?: string }>();
 
   useEffect(() => {
@@ -163,7 +177,8 @@ const Index = () => {
     if (actionData) {
       setIsSaving(false);
       if (actionData.success) {
-        alert("File saved successfully!");
+        setUploadSuccess(true);
+        setTimeout(() => setUploadSuccess(false), 5000); // Hide message after 5 seconds
       } else {
         alert(`Error saving file: ${actionData.error || "Unknown error"}`);
       }
@@ -222,9 +237,9 @@ const Index = () => {
   }
 
   return (
-    <div className="w-full flex flex-col items-center justify-center">
-      <div className="w-full max-w-6xl flex flex-col items-center justify-around gap-4 p-4">
-        <InfoBar name={user?.name} email={user?.email} onLogout={onLogout} />
+    <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center p-4">
+      <InfoBar name={user?.name} email={user?.email} onLogout={onLogout} />
+      <div className="w-full flex flex-col items-center justify-around gap-4 py-8">
         <div className="w-full flex flex-col md:flex-row items-start justify-around gap-12">
           <div className="w-full md:w-1/2 flex flex-col items-center justify-center gap-4">
             <ImageUploader onUpload={uploadImage} />
@@ -243,7 +258,12 @@ const Index = () => {
                 {isScanning ? "Scanning..." : "Scan Image"}
               </button>
             </div>
-            <ImageResult imageInfo={imageInfo} />
+            <ImageResult imageInfo={imageInfo} setImageInfo={setImageInfo} />
+            {uploadSuccess && (
+              <div className="w-full bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <strong className="font-bold">Success!</strong>
+              </div>
+            )}
             <div className="flex gap-4 items-center">
               <p className="font-bold">
                 👉🏻 Step 3:

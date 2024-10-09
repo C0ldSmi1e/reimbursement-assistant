@@ -6,7 +6,7 @@ const MAX_RETRIES = 5;
 
 const prompt = `
   You will be provided a receipt, please read it and answer the following questions:
-  1. What is the date of this transaction?
+  1. What is the date of this transaction? (the date in the receipt might be different, e.g. mm/dd/yyyy or yyyy-mm-dd, you should recognize the date)
   2. What is the receipt for?
   3. What is the total price of the transaction?
 
@@ -89,7 +89,7 @@ const useGemini = (GEMINI_API_KEY: string) => {
     }
   };
 
-  return { onAnalyzeImage, imageInfo, isScanning: isLoading };
+  return { onAnalyzeImage, imageInfo, setImageInfo, isScanning: isLoading };
 };
 
 export default useGemini;

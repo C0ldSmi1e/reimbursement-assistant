@@ -1,27 +1,13 @@
-import { useState, useEffect } from "react";
 import type { ImageInfo } from "~/types";
 
-const ImageResult: React.FC<{ imageInfo: ImageInfo }> = ({ imageInfo }: { imageInfo: ImageInfo }) => {
-  const [message, setMessage] = useState(imageInfo.message || "");
-  const [date, setDate] = useState(imageInfo.date || "");
-  const [item, setItem] = useState(imageInfo.item || "");
-  const [amount, setAmount] = useState(imageInfo.amount || "");
-
-  useEffect(() => {
-    setMessage(imageInfo.message || "");
-    setDate(imageInfo.date || "");
-    setItem(imageInfo.item || "");
-    setAmount(imageInfo.amount || "");
-  }, [imageInfo]);
-
-  if (message.includes("error")) {
-    return (<div className="mt-4 flex flex-col gap-8">
-      Error
-    </div>);
-  }
-
+const ImageResult: React.FC<{ imageInfo: ImageInfo, setImageInfo: (imageInfo: ImageInfo) => void }> = ({ imageInfo, setImageInfo }: { imageInfo: ImageInfo, setImageInfo: (imageInfo: ImageInfo) => void }) => {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
+      {imageInfo.message && imageInfo.message.includes("error") && (
+        <div className="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error! This might not be a receipt.</strong>
+        </div>
+      )}
       <div className="flex gap-4 items-center">
         <label className="w-16" htmlFor="date">Date:</label>
         <input
@@ -29,8 +15,8 @@ const ImageResult: React.FC<{ imageInfo: ImageInfo }> = ({ imageInfo }: { imageI
           id="date"
           name="date"
           type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
+          value={imageInfo.date}
+          onChange={(e) => setImageInfo({ ...imageInfo, date: e.target.value })}
         />
       </div>
       <div className="flex gap-4 items-center">
@@ -40,8 +26,8 @@ const ImageResult: React.FC<{ imageInfo: ImageInfo }> = ({ imageInfo }: { imageI
           id="item"
           name="item"
           type="text"
-          value={item}
-          onChange={(e) => setItem(e.target.value)}
+          value={imageInfo.item}
+          onChange={(e) => setImageInfo({ ...imageInfo, item: e.target.value })}
         />
       </div>
       <div className="flex gap-4 items-center">
@@ -51,8 +37,8 @@ const ImageResult: React.FC<{ imageInfo: ImageInfo }> = ({ imageInfo }: { imageI
           id="amount"
           name="amount"
           type="text"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          value={imageInfo.amount}
+          onChange={(e) => setImageInfo({ ...imageInfo, amount: e.target.value })}
         />
       </div>
     </div>
