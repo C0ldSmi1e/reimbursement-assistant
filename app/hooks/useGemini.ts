@@ -32,8 +32,10 @@ const prompt = `
 
 const useGemini = (GEMINI_API_KEY: string) => {
   const [imageInfo, setImageInfo] = useState<ImageInfo>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const onAnalyzeImage = async (imageData: ImageData) => {
+    setIsLoading(true);
     const client = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -57,10 +59,13 @@ const useGemini = (GEMINI_API_KEY: string) => {
           break;
         }
       } catch (error) {
-        console.error("Error generating content:", error);
+        alert("Failed to analyze image, please try again");
+        setIsLoading(false);
+        return;
       }
       retries++;
     }
+    setIsLoading(false);
   };
 
   const parseImageInfo = async (text: string) => {
@@ -84,7 +89,7 @@ const useGemini = (GEMINI_API_KEY: string) => {
     }
   };
 
-  return { onAnalyzeImage, imageInfo };
+  return { onAnalyzeImage, imageInfo, isScanning: isLoading };
 };
 
 export default useGemini;

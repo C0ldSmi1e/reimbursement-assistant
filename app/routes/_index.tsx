@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { MetaFunction, LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useSubmit } from "@remix-run/react";
+import { useLoaderData, useSubmit, useActionData } from "@remix-run/react";
 import useImageUpload from "~/hooks/useImageUpload";
 import ImagePreview from "~/components/ImagePreview";
 import ImageUploader from "~/components/ImageUploader";
@@ -73,7 +73,6 @@ export const action: ActionFunction = async ({ request }) => {
     if (!user) {
       return json({ success: false });
     }
-
 
     try {
       const oauth2Client = new google.auth.OAuth2(
@@ -147,7 +146,9 @@ const Index = () => {
   }>();
   const submit = useSubmit();
   const { uploadImage, imageData } = useImageUpload();
-  const { onAnalyzeImage, imageInfo } = useGemini(GEMINI_API_KEY);
+  const { onAnalyzeImage, imageInfo, isScanning } = useGemini(GEMINI_API_KEY);
+  const [isSaving, setIsSaving] = useState(false);
+  const actionData = useActionData<{ success: boolean; error?: string }>();
 
   useEffect(() => {
     // Handle Google OAuth redirect
@@ -158,9 +159,20 @@ const Index = () => {
     }
   }, [submit]);
 
+  useEffect(() => { 
+    if (actionData) {
+      setIsSaving(false);
+      if (actionData.success) {
+        alert("File saved successfully!");
+      } else {
+        alert(`Error saving file: ${actionData.error || "Unknown error"}`);
+      }
+    }
+  }, [actionData]);
+
   const onSubmit = async () => {
     if (!imageData) {
-      console.error("No image uploaded");
+      alert("Please upload an image first");
       return;
     }
 
@@ -169,7 +181,7 @@ const Index = () => {
 
   const onSave = async () => {
     if (!imageData || !imageInfo || !imageInfo.message || imageInfo.message === "error") {
-      console.error("No image uploaded");
+      alert("Please upload an image first and scan it");
       return;
     }
 
@@ -179,6 +191,7 @@ const Index = () => {
     }
 
     try {
+      setIsSaving(true);
       submit({
         upload: "true",
         base64: imageData.base64 as string,
@@ -189,10 +202,15 @@ const Index = () => {
         amount: imageInfo.amount as string
       }, { method: "post" });
     } catch (error) {
-      console.error("Error saving file:", error);
+      alert("Error saving file");
+      setIsSaving(false);
     }
   }
 
+  const onLogout = async () => {
+    submit({ logout: "true" }, { method: "post" });
+  };
+  
   if (!isLoggedIn) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -203,31 +221,41 @@ const Index = () => {
     );
   }
 
-  const onLogout = async () => {
-    submit({ logout: "true" }, { method: "post" });
-  };
-
   return (
-    <div className="w-full flex flex-col items-center justify-around gap-4 p-4">
-      <InfoBar name={user?.name} email={user?.email} onLogout={onLogout} />
-      <div className="w-full flex flex-col md:flex-row items-start justify-around gap-8">
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center gap-4">
-          <ImageUploader onUpload={uploadImage} />
-          <ImagePreview imageData={imageData} />
-        </div>
-        <div className="w-full md:w-1/2 flex flex-col items-start justify-center gap-4">
-          <div className="flex gap-4 items-center">
-            <p className="font-bold">
-              👉🏻 Step 2:
-            </p>
-            <button className="border-2 border-black rounded-md px-4 py-2" onClick={onSubmit}>Scan</button>
+    <div className="w-full flex flex-col items-center justify-center">
+      <div className="w-full max-w-6xl flex flex-col items-center justify-around gap-4 p-4">
+        <InfoBar name={user?.name} email={user?.email} onLogout={onLogout} />
+        <div className="w-full flex flex-col md:flex-row items-start justify-around gap-12">
+          <div className="w-full md:w-1/2 flex flex-col items-center justify-center gap-4">
+            <ImageUploader onUpload={uploadImage} />
+            <ImagePreview imageData={imageData} />
           </div>
-          <ImageResult imageInfo={imageInfo} />
-          <div className="flex gap-4 items-center">
-            <p className="font-bold">
-              👉🏻 Step 3:
-            </p>
-            <button className="border-2 border-black rounded-md px-4 py-2" onClick={onSave}>Save</button>
+          <div className="w-full md:w-1/2 flex flex-col items-start justify-center gap-8">
+            <div className="flex gap-4 items-center">
+              <p className="font-bold">
+                👉🏻 Step 2:
+              </p>
+              <button
+                className="border-2 border-black rounded-md px-4 py-2"
+                onClick={onSubmit}
+                disabled={isScanning}
+              >
+                {isScanning ? "Scanning..." : "Scan Image"}
+              </button>
+            </div>
+            <ImageResult imageInfo={imageInfo} />
+            <div className="flex gap-4 items-center">
+              <p className="font-bold">
+                👉🏻 Step 3:
+              </p>
+              <button 
+                className="border-2 border-black rounded-md px-4 py-2" 
+                onClick={onSave} 
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Save to Drive"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

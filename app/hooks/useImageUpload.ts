@@ -20,9 +20,6 @@ const useImageUpload = () => {
       });
     };
     reader.readAsDataURL(file);
-
-    console.log(imageData?.base64);
-    console.log(imageData?.mimeType);
   };
 
   return { uploadImage, imageData };

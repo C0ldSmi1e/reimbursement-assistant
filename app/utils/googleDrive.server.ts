@@ -1,4 +1,14 @@
-const craftFilename = ({ date, item, amount, mimeType }: { date: string, item: string, amount: string, mimeType: string }) => {
+const craftFilename = ({
+  date,
+  item,
+  amount,
+  mimeType,
+}: {
+  date: string;
+  item: string;
+  amount: string;
+  mimeType: string;
+}) => {
   const parts = [];
   if (date) {
     parts.push(date.replace(/\D/g, '_'));

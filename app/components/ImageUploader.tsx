@@ -28,7 +28,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload }) => {
           👉🏻 Step 1:
         </p>
         <button className="border-2 border-black rounded-md px-4 py-2" onClick={() => fileInputRef.current?.click()}>
-          Upload Image
+          Upload A Receipt
         </button>
       </div>
     </div>

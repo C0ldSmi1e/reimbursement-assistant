@@ -15,13 +15,13 @@ const ImageResult: React.FC<{ imageInfo: ImageInfo }> = ({ imageInfo }: { imageI
   }, [imageInfo]);
 
   if (message.includes("error")) {
-    return (<div className="mt-4 flex flex-col gap-4">
+    return (<div className="mt-4 flex flex-col gap-8">
       Error
     </div>);
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       <div className="flex gap-4 items-center">
         <label className="w-16" htmlFor="date">Date:</label>
         <input
