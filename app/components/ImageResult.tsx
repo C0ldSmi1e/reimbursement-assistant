@@ -1,9 +1,17 @@
-import type { ImageInfo } from "~/types";
+import type { ReceiptInfo } from "~/types";
 
-const ImageResult: React.FC<{ imageInfo: ImageInfo, setImageInfo: (imageInfo: ImageInfo) => void }> = ({ imageInfo, setImageInfo }: { imageInfo: ImageInfo, setImageInfo: (imageInfo: ImageInfo) => void }) => {
+const ImageResult: React.FC<{
+  receiptInfo: ReceiptInfo,
+  setReceiptInfo: (receiptInfo: ReceiptInfo) => void
+}> = ({
+  receiptInfo, setReceiptInfo
+}: {
+  receiptInfo: ReceiptInfo,
+  setReceiptInfo: (receiptInfo: ReceiptInfo) => void
+}) => {
   return (
     <div className="flex flex-col gap-4">
-      {imageInfo.message && imageInfo.message.includes("error") && (
+      {receiptInfo.message && receiptInfo.message.includes("error") && (
         <div className="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Error! This might not be a receipt.</strong>
         </div>
@@ -15,8 +23,8 @@ const ImageResult: React.FC<{ imageInfo: ImageInfo, setImageInfo: (imageInfo: Im
           id="date"
           name="date"
           type="date"
-          value={imageInfo.date}
-          onChange={(e) => setImageInfo({ ...imageInfo, date: e.target.value })}
+          value={receiptInfo.date}
+          onChange={(e) => setReceiptInfo({ ...receiptInfo, date: e.target.value })}
         />
       </div>
       <div className="flex gap-4 items-center">
@@ -26,8 +34,8 @@ const ImageResult: React.FC<{ imageInfo: ImageInfo, setImageInfo: (imageInfo: Im
           id="item"
           name="item"
           type="text"
-          value={imageInfo.item}
-          onChange={(e) => setImageInfo({ ...imageInfo, item: e.target.value })}
+          value={receiptInfo.item}
+          onChange={(e) => setReceiptInfo({ ...receiptInfo, item: e.target.value })}
         />
       </div>
       <div className="flex gap-4 items-center">
@@ -37,8 +45,8 @@ const ImageResult: React.FC<{ imageInfo: ImageInfo, setImageInfo: (imageInfo: Im
           id="amount"
           name="amount"
           type="text"
-          value={imageInfo.amount}
-          onChange={(e) => setImageInfo({ ...imageInfo, amount: e.target.value })}
+          value={receiptInfo.amount}
+          onChange={(e) => setReceiptInfo({ ...receiptInfo, amount: e.target.value })}
         />
       </div>
     </div>

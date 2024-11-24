@@ -81,4 +81,19 @@ module.exports = {
       },
     },
   ],
+
+  "rules": {
+    "@typescript-eslint/no-explicit-any": ["off"],
+    "indent": [
+      "error",
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["error", "double"],
+    "semi": ["error", "always"],
+    "no-console": 0
+  }
 };

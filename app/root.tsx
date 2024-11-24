@@ -28,6 +28,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.js"></script>
+        <script src="https://cdnjs.com/libraries/pdf.js"></script>
+        <script src="https://cdn.dwolla.com/1/dwolla.js"></script>
         <Meta />
         <Links />
       </head>

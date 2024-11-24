@@ -1,61 +1,107 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ImageData, ImageInfo } from "~/types";
+import type { ReceiptInfo, ImageData  } from "~/types";
 
 const MAX_RETRIES = 5;
 
 const prompt = `
-  You will be provided a receipt, please read it and answer the following questions:
-  1. What is the date of this transaction? (the date in the receipt might be different, e.g. mm/dd/yyyy or yyyy-mm-dd, you should recognize the date)
-  2. What is the receipt for?
-  3. What is the total price of the transaction?
+# You will be provided a receipt or invoice, it might be a single page or multiple pages of images.
 
-  Please tell me the date, item, and price, answer in the following format:
-  [[date]]: [[...]]
-  [[item]]: [[...]]
-  [[amount]]: [[...]]
+** IMPORTANT: YOU MUST OBEY ALL INSTRUCTIONS BELOW **
 
-  Note:
-  1. you do not need to tell me all the subtotal, tax, and tip, just give me the description of the item and the total price of the transaction.
-  2. the date should be in the format of YYYY-MM-DD
+** Please read the receipt and recognize the following information: **
+1. date: the date of this transaction
+2. item: the name of the store
+3. amount: the total price of the transaction
 
-  OUTPUT EXAMPLE:
-  [[date]]: [[2024-02-14]]
-  [[item]]: [[Starbucks]]
-  [[amount]]: [[$10.50]]
+** Note: **
+1. the date might be in the format of YYYY-MM-DD, mm/dd/yy, mm/dd/yyyy, etc. You should recognize the date and format it as YYYY-MM-DD
+2. you do not need to tell me all the subtotal, tax, and tip, just give me the description of the item and the total price of the transaction.
+3. you can read the receipt again and again, until you are sure about the information.
 
-  If you can't regnize any of them, leave it blank like [[item]]: [[]]
-  If there are multiple receipts in the image, please answer: [[message]]: [[error: multiple receipts]]
-  If you think it's not a receipt, please answer: [[message]]: [[error: not a receipt]]
-  Do not include any other content in your answer
+** Please give me the date, item, and price in json format: **
+
+\`\`\`json
+{
+  date: "YYYY-MM-DD",
+  item: "...",
+  amount: "..."
+}
+\`\`\`
+
+OUTPUT EXAMPLE:
+
+\`\`\`json
+{
+  date: "2024-02-14",
+  item: "Starbucks",
+  amount: "$10.50"
+}
+\`\`\`
+
+If you can't regnize any of the information, leave it as an empty string. For example, if you can't recognize the item, you should return:
+\`\`\`json
+{
+  date: "YYYY-MM-DD",
+  item: "",
+  amount: "..."
+}
+\`\`\`
+
+If you think the receipts or invoices belong to different transactions, please answer:
+\`\`\`json
+{
+  message: "error: multiple transactions"
+}
+\`\`\`
+
+If you think it's not a receipt, please answer:
+\`\`\`json
+{
+  message: "error: not a receipt"
+}
+\`\`\`
+
+** LAST BUT NOT LEAST, DO NOT include any content other than the json in your answer. **
 `;
 
 const useGemini = (GEMINI_API_KEY: string) => {
-  const [imageInfo, setImageInfo] = useState<ImageInfo>({});
+  const [receiptInfo, setReceiptInfo] = useState<ReceiptInfo>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const onAnalyzeImage = async (imageData: ImageData) => {
+  const onAnalyzeReceipt = async (receiptData: ImageData[]) => {
     setIsLoading(true);
     const client = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const base64Data = imageData.base64.split(',')[1];
-
-    const imagePart = {
+    const imageParts = receiptData.map((image) => ({
       inlineData: {
-        data: base64Data,
-        mimeType: imageData.mimeType
+        data: image.base64.split(",")[1],
+        mimeType: image.mimeType
       }
-    };
+    }));
 
     let retries = 0;
 
     while (retries < MAX_RETRIES) {
       try {
-        const res = await model.generateContent([prompt, imagePart]);
+        const res = await model.generateContent([prompt, ...imageParts]);
         const text = res.response.text();
-        await parseImageInfo(text);
-        if (imageInfo.message !== "error") {
+        // await parseReceiptInfo(text);
+
+        if (text.includes("error")) {
+          setReceiptInfo({ message: text });
+          break;
+        }
+
+        const parsedText = text.replace("```json", "").replace("```", "");
+        const json = parseJson(parsedText);
+
+        if (json) {
+          setReceiptInfo({
+            message: "success",
+            ...json,
+          });
           break;
         }
       } catch (error) {
@@ -68,12 +114,21 @@ const useGemini = (GEMINI_API_KEY: string) => {
     setIsLoading(false);
   };
 
-  const parseImageInfo = async (text: string) => {
+  const parseJson = (text: string) => {
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  /*
+  const parseReceiptInfo = async (text: string) => {
     if (text.includes("error")) {
-      setImageInfo({ message: text });
+      setReceiptInfo({ message: text });
     } else {
-      const lines = text.split('\n');
-      const imageInfo: ImageInfo = {
+      const lines = text.split("\n");
+      const receiptInfo: ReceiptInfo = {
         message: "success"
       };
 
@@ -81,15 +136,21 @@ const useGemini = (GEMINI_API_KEY: string) => {
         const match = line.match(/\[\[(.*?)\]\]: \[\[(.*?)\]\]/);
         if (match) {
           const [, key, value] = match;
-          imageInfo[key as keyof ImageInfo] = value.trim();
+          receiptInfo[key as keyof ReceiptInfo] = value.trim();
         }
       });
 
-      setImageInfo(imageInfo);
+      setReceiptInfo(receiptInfo);
     }
   };
+  */
 
-  return { onAnalyzeImage, imageInfo, setImageInfo, isScanning: isLoading };
+  return {
+    onAnalyzeReceipt,
+    receiptInfo,
+    setReceiptInfo,
+    isScanning: isLoading,
+  };
 };
 
 export default useGemini;

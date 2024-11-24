@@ -3,24 +3,29 @@ const craftFilename = ({
   item,
   amount,
   mimeType,
+  page,
 }: {
   date: string;
   item: string;
   amount: string;
   mimeType: string;
+  page: string;
 }) => {
   const parts = [];
   if (date) {
-    parts.push(date.replace(/\D/g, '_'));
+    parts.push(date.replace(/\D/g, "_"));
   }
   if (item) {
-    parts.push(item.replace(/\W/g, '_'));
+    parts.push(item.replace(/\W/g, "_"));
   }
   if (amount) {
-    parts.push(amount.replace(/\D/g, '_'));
+    parts.push(amount.replace(/\D/g, "_"));
   }
-  const extension = mimeType.split('/')[1];
-  const filename = parts.join('+') + `.${extension}`;
+  if (page) {
+    parts.push(page);
+  }
+  const extension = mimeType.split("/")[1];
+  const filename = parts.join("+") + `.${extension}`;
   return filename;
 };
 
@@ -38,8 +43,8 @@ const findOrCreateFolder = async ({
   try {
     const response = await driveClient.files.list({
       q: query,
-      fields: 'files(id, name)',
-      spaces: 'drive',
+      fields: "files(id, name)",
+      spaces: "drive",
     });
 
     if (response.data.files && response.data.files.length > 0) {
@@ -52,21 +57,21 @@ const findOrCreateFolder = async ({
 
     const fileMetadata = {
       name: folderName,
-      mimeType: 'application/vnd.google-apps.folder',
+      mimeType: "application/vnd.google-apps.folder",
     };
 
     const folder = await driveClient.files.create({
       resource: fileMetadata,
-      fields: 'id',
+      fields: "id",
     });
 
     console.log(`New folder created. Name: ${folderName}, ID: ${folder.data.id}`);
     return folder.data.id;
   } catch (error) {
-    console.error('Error finding or creating folder:', error);
+    console.error("Error finding or creating folder:", error);
     throw error;
   }
-}
+};
 
 const findOrCreateSheet = async ({
   driveClient,
@@ -79,8 +84,8 @@ const findOrCreateSheet = async ({
 }) => {
   const response = await driveClient.files.list({
     q: `name = '${sheetName}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`,
-    fields: 'files(id, name)',
-    spaces: 'drive',
+    fields: "files(id, name)",
+    spaces: "drive",
   });
 
   if (response.data.files && response.data.files.length > 0) {
@@ -92,13 +97,13 @@ const findOrCreateSheet = async ({
 
   const fileMetadata = {
     name: sheetName,
-    mimeType: 'application/vnd.google-apps.spreadsheet',
+    mimeType: "application/vnd.google-apps.spreadsheet",
     parents: [folderId],
   };
 
   const sheet = await driveClient.files.create({
     resource: fileMetadata,
-    fields: 'id',
+    fields: "id",
   });
 
   console.log(`New sheet created. Name: ${sheetName}, ID: ${sheet.data.id}`);
@@ -117,7 +122,7 @@ const checkSheet = async ({
     // Get the values from A1:C1
     const response = await sheetsClient.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'A1:C1',
+      range: "A1:C1",
     });
 
     const values = response.data.values;
@@ -125,26 +130,26 @@ const checkSheet = async ({
     // Check if the headers exist and are correct
     if (values && values.length > 0 &&
         values[0].length === 3 &&
-        values[0][0] === 'date' &&
-        values[0][1] === 'item' &&
-        values[0][2] === 'amount') {
+        values[0][0] === "date" &&
+        values[0][1] === "item" &&
+        values[0][2] === "amount") {
       return { ok: true };
     }
 
     // If headers are missing or incorrect, add new headers
     await sheetsClient.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: 'A1:C1',
-      valueInputOption: 'RAW',
+      range: "A1:C1",
+      valueInputOption: "RAW",
       requestBody: {
-        values: [['date', 'item', 'amount']],
+        values: [["date", "item", "amount"]],
       },
     });
 
-    console.log('Headers added or updated');
+    console.log("Headers added or updated");
     return { ok: true };
   } catch (error) {
-    console.error('Error checking or updating sheet:', error);
+    console.error("Error checking or updating sheet:", error);
     throw error;
   }
 };
@@ -166,7 +171,7 @@ const appendNewItemToSheet = async ({
     // Get the current values in the sheet
     const response = await sheetsClient.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'A:C',
+      range: "A:C",
     });
 
     const values = response.data.values;
@@ -177,9 +182,9 @@ const appendNewItemToSheet = async ({
     // Append the new item
     await sheetsClient.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: 'A:C',
-      valueInputOption: 'USER_ENTERED',
-      insertDataOption: 'INSERT_ROWS',
+      range: "A:C",
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
       requestBody: {
         values: [[date, item, amount]],
       },
@@ -188,7 +193,7 @@ const appendNewItemToSheet = async ({
     console.log(`New item appended to row ${newRowIndex}`);
     return { success: true, rowIndex: newRowIndex };
   } catch (error) {
-    console.error('Error appending new item to sheet:', error);
+    console.error("Error appending new item to sheet:", error);
     throw error;
   }
 };
