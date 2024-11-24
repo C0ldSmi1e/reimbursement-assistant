@@ -3,7 +3,7 @@ import type { ImageData } from "~/types";
 
 const acceptedTypes = ["image/png", "image/jpeg", "image/webp", "image/heic", "image/heif", "application/pdf"];
 
-const useImageUpload = () => {
+const useReceipt = () => {
   const [receiptData, setReceiptData] = useState<ImageData[] | null>(null);
 
   const convertPdfToImage = async (file: File): Promise<ImageData[]> => {
@@ -93,4 +93,4 @@ const useImageUpload = () => {
   return { uploadFile, receiptData };
 };
 
-export default useImageUpload;
+export default useReceipt;

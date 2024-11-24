@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import type { MetaFunction, LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useSubmit, useActionData, useFetcher } from "@remix-run/react";
-import useImageUpload from "~/hooks/useImageUpload";
+import { useLoaderData, useSubmit, useActionData } from "@remix-run/react";
 import ImagePreview from "~/components/ImagePreview";
 import ImageUploader from "~/components/ImageUploader";
 import useGemini from "~/hooks/useGemini";
+import useReceipt from "~/hooks/useReceipt";
 import { google } from "googleapis";
 import ImageResult from "~/components/ImageResult";
 import { getGoogleAuthUrl, getValidAccessToken } from "~/utils/googleAuth.server";
@@ -19,11 +19,6 @@ import {
 import { getSession } from "~/utils/session.server";
 import { Readable } from "stream";
 import InfoBar from "~/components/InfoBar";
-
-const ACTIONS = {
-  UPLOAD_IMAGE: "UPLOAD_IMAGE",
-  UPDATE_SHEET: "UPDATE_SHEET",
-};
 
 export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request.headers.get("Cookie"));
@@ -49,7 +44,6 @@ export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
 
   const code = formData.get("code");
-  const action = formData.get("action");
 
   const uploadImage = formData.get("uploadImage");
   const updateSheet = formData.get("updateSheet");
@@ -199,9 +193,8 @@ const Index = () => {
   }>();
   const actionData = useActionData<{ success: boolean; error?: string }>();
   const submit = useSubmit();
-  const fetcher = useFetcher();
 
-  const { uploadFile, receiptData } = useImageUpload();
+  const { uploadFile, receiptData } = useReceipt();
   const {
     onAnalyzeReceipt,
     receiptInfo,
