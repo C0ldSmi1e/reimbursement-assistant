@@ -11,10 +11,11 @@ import SaveToGoogleDrive from "~/components/SaveToGoogleDrive";
 import { getGoogleAuthUrl } from "~/utils/googleAuth.server";
 import { getSession } from "~/utils/session.server";
 import InfoBar from "~/components/InfoBar";
+import type { User } from "~/types";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request.headers.get("Cookie"));
-  const user = session.get("user");
+  const user = session.get("user") as User | null;
 
   if (!user) {
     const googleAuthUrl = getGoogleAuthUrl();
@@ -60,19 +61,16 @@ const Index = () => {
     GEMINI_API_KEY
   } = useLoaderData<{
     isLoggedIn: boolean;
-    user?: {
-      email: string;
-      name: string;
-      accessToken: string;
-      refreshToken: string;
-    };
+    user?: User;
     googleAuthUrl?: string;
     GEMINI_API_KEY: string;
   }>();
+
   const actionData = useActionData<{
     success: boolean;
     error?: string;
   }>();
+
   const submit = useSubmit();
 
   const { uploadFile, receiptData } = useReceipt();

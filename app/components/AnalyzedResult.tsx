@@ -24,7 +24,8 @@ const AnalyzedResult: React.FC<{
           name="date"
           type="date"
           value={receiptInfo.date}
-          onChange={(e) => setReceiptInfo({ ...receiptInfo, date: e.target.value })}
+          onChange={(e) => setReceiptInfo({
+            ...receiptInfo, date: e.target.value })}
         />
       </div>
       <div className="flex gap-4 items-center">
@@ -46,7 +47,8 @@ const AnalyzedResult: React.FC<{
           name="amount"
           type="text"
           value={receiptInfo.amount}
-          onChange={(e) => setReceiptInfo({ ...receiptInfo, amount: e.target.value })}
+          onChange={(e) => setReceiptInfo({ ...receiptInfo, amount: e.target.value
+          })}
         />
       </div>
     </div>

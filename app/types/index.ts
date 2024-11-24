@@ -1,3 +1,10 @@
+type User = {
+  name: string;
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
 type ImageData = {
   page: number;
   base64: string;
@@ -11,14 +18,15 @@ type ReceiptInfo = {
   amount?: string;
 }
 
-type Response = {
+interface Response {
   success: boolean;
   error?: string;
   data?: object;
-};
+}
 
 export type {
   ImageData,
   ReceiptInfo,
   Response,
+  User,
 };
