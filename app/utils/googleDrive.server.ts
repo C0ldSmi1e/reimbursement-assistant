@@ -11,7 +11,7 @@ const craftFilename = ({
   item: string;
   amount: string;
   mimeType: string;
-  page: string;
+  page: number;
 }) => {
   const parts = [];
   if (date) {
@@ -24,7 +24,7 @@ const craftFilename = ({
     parts.push(amount.replace(/\D/g, "_"));
   }
   if (page) {
-    parts.push(page);
+    parts.push(page.toString());
   }
   const extension = mimeType.split("/")[1];
   const filename = parts.join("+") + `.${extension}`;
@@ -165,9 +165,9 @@ const appendNewItemToSheet = async ({
 }: {
   sheetsClient: sheets_v4.Sheets;
   sheetId: string;
-  date: string;
-  item: string;
-  amount: string;
+  date: string | undefined;
+  item: string | undefined;
+  amount: string | undefined;
 }) => {
   try {
     // Get the current values in the sheet
@@ -188,7 +188,7 @@ const appendNewItemToSheet = async ({
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: {
-        values: [[date, item, amount]],
+        values: [[date || "", item || "", amount || ""]],
       },
     });
 

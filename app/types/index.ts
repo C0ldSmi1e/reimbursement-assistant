@@ -1,14 +1,23 @@
-interface ImageData {
+type ImageData = {
   page: number;
   base64: string;
   mimeType: string;
 }
 
-interface ReceiptInfo {
+type ReceiptInfo = {
   message?: string;
   date?: string;
   item?: string;
   amount?: string;
 }
 
-export type { ImageData, ReceiptInfo };
+type Response = {
+  success: boolean;
+  error?: string;
+};
+
+export type {
+  ImageData,
+  ReceiptInfo,
+  Response,
+};
