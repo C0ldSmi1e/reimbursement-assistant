@@ -16,12 +16,11 @@ import {
   findOrCreateSheet,
   appendNewItemToSheet
 } from "~/utils/googleDrive.server";
-import { destroySession, getSession } from "~/utils/session.server";
+import { getSession } from "~/utils/session.server";
 import { Readable } from "stream";
 import InfoBar from "~/components/InfoBar";
 
 const ACTIONS = {
-  LOGOUT: "LOGOUT",
   UPLOAD_IMAGE: "UPLOAD_IMAGE",
   UPDATE_SHEET: "UPDATE_SHEET",
 };
@@ -66,15 +65,6 @@ export const action: ActionFunction = async ({ request }) => {
 
   if (code) {
     return redirect(`/auth/google/callback?code=${code}`);
-  }
-
-  if (action === ACTIONS.LOGOUT) {
-    const session = await getSession(request.headers.get("Cookie"));
-    return redirect("/", {
-      headers: {
-        "Set-Cookie": await destroySession(session),
-      },
-    });
   }
 
   if (updateSheet === "true") {
@@ -325,10 +315,6 @@ const Index = () => {
       setIsSavingToQuickbooks(false);
     }
   };
-
-  const onLogout = async () => {
-    fetcher.submit({ action: ACTIONS.LOGOUT }, { method: "post" });
-  };
   
   if (!isLoggedIn) {
     return (
@@ -342,7 +328,7 @@ const Index = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center p-4">
-      <InfoBar name={user?.name} email={user?.email} onLogout={onLogout} />
+      <InfoBar name={user?.name} email={user?.email} />
       <div className="w-full flex flex-col items-center justify-around gap-4 py-8">
         <div className="w-full flex flex-col md:flex-row items-start justify-around gap-12">
           <div className="w-full md:w-1/2 flex flex-col items-center justify-center gap-4">

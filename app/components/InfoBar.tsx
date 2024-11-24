@@ -1,11 +1,11 @@
+import { Form } from "@remix-run/react";
+
 const InfoBar = ({
   name,
   email,
-  onLogout,
 }: {
   name: string | undefined;
   email: string | undefined;
-  onLogout: () => void;
 }) => {
   return (
     <div className="w-full flex justify-between items-center gap-4 border-2 border-black rounded-md p-4">
@@ -15,7 +15,9 @@ const InfoBar = ({
         <span className="hidden md:block">{name} | </span>
         <span>{email}</span>
       </div>
-      <button onClick={onLogout}>Logout</button>
+      <Form method="post" action="/logout">
+        <button type="submit">Logout</button>
+      </Form>
     </div>
   );
 };
