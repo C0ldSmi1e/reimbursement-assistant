@@ -1,3 +1,5 @@
+import { drive_v3, sheets_v4 } from "googleapis";
+
 const craftFilename = ({
   date,
   item,
@@ -33,7 +35,7 @@ const findOrCreateFolder = async ({
   driveClient,
   folderName,
 }: {
-  driveClient: any;
+  driveClient: drive_v3.Drive;
   folderName: string;
 }) => {
   console.log(`Searching for folder: ${folderName}`);
@@ -61,7 +63,7 @@ const findOrCreateFolder = async ({
     };
 
     const folder = await driveClient.files.create({
-      resource: fileMetadata,
+      requestBody: fileMetadata,
       fields: "id",
     });
 
@@ -78,7 +80,7 @@ const findOrCreateSheet = async ({
   folderId,
   sheetName,
 }: {
-  driveClient: any;
+  driveClient: drive_v3.Drive;
   folderId: string;
   sheetName: string;
 }) => {
@@ -102,7 +104,7 @@ const findOrCreateSheet = async ({
   };
 
   const sheet = await driveClient.files.create({
-    resource: fileMetadata,
+    requestBody: fileMetadata,
     fields: "id",
   });
 
@@ -115,7 +117,7 @@ const checkSheet = async ({
   sheetsClient,
   sheetId,
 }: {
-  sheetsClient: any;
+  sheetsClient: sheets_v4.Sheets;
   sheetId: string;
 }) => {
   try {
@@ -161,7 +163,7 @@ const appendNewItemToSheet = async ({
   item,
   amount,
 }: {
-  sheetsClient: any;
+  sheetsClient: sheets_v4.Sheets;
   sheetId: string;
   date: string;
   item: string;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { MetaFunction, LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useSubmit, useActionData } from "@remix-run/react";
+import { useLoaderData, useSubmit, useActionData, useFetcher } from "@remix-run/react";
 import useImageUpload from "~/hooks/useImageUpload";
 import ImagePreview from "~/components/ImagePreview";
 import ImageUploader from "~/components/ImageUploader";
@@ -9,10 +9,22 @@ import useGemini from "~/hooks/useGemini";
 import { google } from "googleapis";
 import ImageResult from "~/components/ImageResult";
 import { getGoogleAuthUrl, getValidAccessToken } from "~/utils/googleAuth.server";
-import { checkSheet, craftFilename, findOrCreateFolder, findOrCreateSheet, appendNewItemToSheet } from "~/utils/googleDrive.server";
+import {
+  checkSheet,
+  craftFilename,
+  findOrCreateFolder,
+  findOrCreateSheet,
+  appendNewItemToSheet
+} from "~/utils/googleDrive.server";
 import { destroySession, getSession } from "~/utils/session.server";
 import { Readable } from "stream";
 import InfoBar from "~/components/InfoBar";
+
+const ACTIONS = {
+  LOGOUT: "LOGOUT",
+  UPLOAD_IMAGE: "UPLOAD_IMAGE",
+  UPDATE_SHEET: "UPDATE_SHEET",
+};
 
 export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request.headers.get("Cookie"));
@@ -37,11 +49,9 @@ export const meta: MetaFunction = () => {
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
 
-  console.log(formData);
-
   const code = formData.get("code");
+  const action = formData.get("action");
 
-  const logout = formData.get("logout");
   const uploadImage = formData.get("uploadImage");
   const updateSheet = formData.get("updateSheet");
 
@@ -54,14 +64,11 @@ export const action: ActionFunction = async ({ request }) => {
   const item = formData.get("item") as string;
   const amount = formData.get("amount") as string;
 
-  console.log(uploadImage, updateSheet);
-
   if (code) {
     return redirect(`/auth/google/callback?code=${code}`);
   }
 
-  if (logout === "true") {
-    console.log("logout");
+  if (action === ACTIONS.LOGOUT) {
     const session = await getSession(request.headers.get("Cookie"));
     return redirect("/", {
       headers: {
@@ -200,7 +207,10 @@ const Index = () => {
     googleAuthUrl?: string;
     GEMINI_API_KEY: string;
   }>();
+  const actionData = useActionData<{ success: boolean; error?: string }>();
   const submit = useSubmit();
+  const fetcher = useFetcher();
+
   const { uploadFile, receiptData } = useImageUpload();
   const {
     onAnalyzeReceipt,
@@ -211,7 +221,6 @@ const Index = () => {
   const [isSavingToDrive, setIsSavingToDrive] = useState(false);
   const [isSavingToQuickbooks, setIsSavingToQuickbooks] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const actionData = useActionData<{ success: boolean; error?: string }>();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -318,7 +327,7 @@ const Index = () => {
   };
 
   const onLogout = async () => {
-    submit({ logout: "true" }, { method: "post" });
+    fetcher.submit({ action: ACTIONS.LOGOUT }, { method: "post" });
   };
   
   if (!isLoggedIn) {

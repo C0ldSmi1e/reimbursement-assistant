@@ -1,5 +1,5 @@
 import { redirect } from "@remix-run/node";
-import { google } from 'googleapis';
+import { google } from "googleapis";
 import { getSession, commitSession, destroySession } from "~/utils/session.server";
 
 export const oauth2Client = new google.auth.OAuth2(
@@ -10,11 +10,11 @@ export const oauth2Client = new google.auth.OAuth2(
 
 export function getGoogleAuthUrl() {
   return oauth2Client.generateAuthUrl({
-    access_type: 'offline',
+    access_type: "offline",
     scope: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/drive.file',
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/drive.file",
     ],
   });
 }
@@ -23,7 +23,7 @@ export async function getGoogleUser(code: string) {
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
 
-  const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+  const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
   const { data } = await oauth2.userinfo.get();
   return {
     email: data.email,
