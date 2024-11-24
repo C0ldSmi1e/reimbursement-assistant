@@ -30,7 +30,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload }) => {
         <button
           className="border-2 border-black rounded-md px-4 py-2"
           onClick={() => {
-            console.log("clicked");
             fileInputRef.current?.click();
           }}
         >

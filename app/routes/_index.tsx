@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import type { MetaFunction, LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useSubmit, useActionData, useFetcher } from "@remix-run/react";
+import { useLoaderData, useSubmit, useActionData } from "@remix-run/react";
 import ImagePreview from "~/components/ImagePreview";
 import ImageUploader from "~/components/ImageUploader";
 import useGemini from "~/hooks/useGemini";
 import useReceipt from "~/hooks/useReceipt";
-import ImageResult from "~/components/ImageResult";
+import AnalyzedResult from "~/components/AnalyzedResult";
+import SaveToGoogleDrive from "~/components/SaveToGoogleDrive";
 import { getGoogleAuthUrl } from "~/utils/googleAuth.server";
 import { getSession } from "~/utils/session.server";
 import InfoBar from "~/components/InfoBar";
@@ -52,7 +53,12 @@ export const action: ActionFunction = async ({ request }) => {
 
 
 const Index = () => {
-  const { isLoggedIn, user, googleAuthUrl, GEMINI_API_KEY } = useLoaderData<{
+  const {
+    isLoggedIn,
+    user,
+    googleAuthUrl,
+    GEMINI_API_KEY
+  } = useLoaderData<{
     isLoggedIn: boolean;
     user?: {
       email: string;
@@ -63,19 +69,20 @@ const Index = () => {
     googleAuthUrl?: string;
     GEMINI_API_KEY: string;
   }>();
-  const actionData = useActionData<{ success: boolean; error?: string }>();
+  const actionData = useActionData<{
+    success: boolean;
+    error?: string;
+  }>();
   const submit = useSubmit();
-  const fetcher = useFetcher();
 
   const { uploadFile, receiptData } = useReceipt();
+
   const {
     onAnalyzeReceipt,
     receiptInfo,
     setReceiptInfo,
     isScanning
   } = useGemini(GEMINI_API_KEY);
-  const [isSavingToQuickbooks, setIsSavingToQuickbooks] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   useEffect(() => {
     // Handle Google OAuth redirect
@@ -88,12 +95,8 @@ const Index = () => {
 
   useEffect(() => { 
     if (actionData) {
-      setIsSavingToQuickbooks(false);
       if (!actionData.success) {
         alert(`Error saving file: ${actionData.error || "Unknown error"}`);
-      } else {
-        setUploadSuccess(true);
-        setTimeout(() => setUploadSuccess(false), 5000);
       }
     }
   }, [actionData]);
@@ -107,58 +110,6 @@ const Index = () => {
     await onAnalyzeReceipt(receiptData);
   };
 
-  const onSaveToGoogleDrive = async () => {
-    if (!receiptData || !receiptInfo || !receiptInfo.message || receiptInfo.message === "error") {
-      alert("Please upload a receipt first and scan it");
-      return;
-    }
-
-    if (!receiptInfo.date || !receiptInfo.item || !receiptInfo.amount) {
-      alert("Please set date, item, and amount first");
-      return;
-    }
-
-    try {
-      const payload = {
-        uploadImage: "true",
-        receiptData,
-        receiptInfo
-      };
-
-      fetcher.submit(
-        {
-          dataStr: JSON.stringify(payload),
-        },
-        {
-          method: "post",
-          action: "/save/google-drive",
-        },
-      );
-
-    } catch (error) {
-      alert("Error saving files");
-    }
-  };
-
-  const onSaveToQuickbooks = async () => {
-    if (!receiptData || !receiptInfo || !receiptInfo.message || receiptInfo.message === "error") {
-      alert("Please upload a receipt first and scan it");
-      return;
-    }
-
-    if (!receiptInfo.date || !receiptInfo.item || !receiptInfo.amount) {
-      alert("Please set date, item, and amount first");
-      return;
-    }
-
-    try {
-      setIsSavingToQuickbooks(true);
-    } catch (error) {
-      alert("Error saving file");
-      setIsSavingToQuickbooks(false);
-    }
-  };
-  
   if (!isLoggedIn) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -193,36 +144,8 @@ const Index = () => {
                 {isScanning ? "Scanning..." : "Scan Image"}
               </button>
             </div>
-            <ImageResult receiptInfo={receiptInfo} setReceiptInfo={setReceiptInfo} />
-            {uploadSuccess && (
-              <div className="w-full bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                <strong className="font-bold">Success!</strong>
-              </div>
-            )}
-            <div className="flex gap-4 items-center">
-              <p className="font-bold">
-                👉🏻 Step 3:
-              </p>
-              <button 
-                className="border-2 border-black rounded-md px-4 py-2" 
-                onClick={onSaveToGoogleDrive} 
-                disabled={fetcher.state !== "idle"}
-              >
-                {fetcher.state !== "idle" ? "Saving..." : "Save to Drive"}
-              </button>
-            </div>
-            <div className="flex gap-4 items-center">
-              <p className="font-bold">
-              👉🏻 Step 4:
-              </p>
-              <button 
-                className="border-2 border-black rounded-md px-4 py-2" 
-                onClick={onSaveToQuickbooks} 
-                disabled={isSavingToQuickbooks}
-              >
-                {isSavingToQuickbooks ? "Saving..." : "Save to Quickbooks"}
-              </button>
-            </div>
+            <AnalyzedResult receiptInfo={receiptInfo} setReceiptInfo={setReceiptInfo} />
+            <SaveToGoogleDrive receiptInfo={receiptInfo} receiptData={receiptData} />
           </div>
         </div>
       </div>

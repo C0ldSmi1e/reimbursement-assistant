@@ -1,6 +1,6 @@
 import type { ReceiptInfo } from "~/types";
 
-const ImageResult: React.FC<{
+const AnalyzedResult: React.FC<{
   receiptInfo: ReceiptInfo,
   setReceiptInfo: (receiptInfo: ReceiptInfo) => void
 }> = ({
@@ -53,4 +53,4 @@ const ImageResult: React.FC<{
   );
 };
 
-export default ImageResult;
+export default AnalyzedResult;

@@ -14,6 +14,7 @@ type ReceiptInfo = {
 type Response = {
   success: boolean;
   error?: string;
+  data?: object;
 };
 
 export type {
