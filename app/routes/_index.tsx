@@ -8,26 +8,20 @@ import useGemini from "~/hooks/useGemini";
 import useReceipt from "~/hooks/useReceipt";
 import AnalyzedResult from "~/components/AnalyzedResult";
 import SaveToGoogleDrive from "~/components/SaveToGoogleDrive";
-import { getGoogleAuthUrl } from "~/utils/googleAuth.server";
 import { getSession } from "~/utils/session.server";
 import InfoBar from "~/components/InfoBar";
+import { authenticate } from "~/utils/authenticate.server";
 import type { User } from "~/types";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const session = await getSession(request.headers.get("Cookie"));
   const user = session.get("user") as User | null;
 
-  if (!user) {
-    const googleAuthUrl = getGoogleAuthUrl();
-    return json({
-      isLoggedIn: false,
-      googleAuthUrl,
-      GEMINI_API_KEY: process.env.GEMINI_API_KEY
-    });
+  if (!user || !authenticate(request)) {
+    return redirect("/login");
   }
 
   return json({
-    isLoggedIn: true,
     user,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY
   });
@@ -44,6 +38,10 @@ export const meta: MetaFunction = () => {
 };
 
 export const action: ActionFunction = async ({ request }) => {
+  if (!authenticate(request)) {
+    return redirect("/login");
+  }
+
   const formData = await request.formData();
   const code = formData.get("code");
   if (code) {
@@ -55,14 +53,10 @@ export const action: ActionFunction = async ({ request }) => {
 
 const Index = () => {
   const {
-    isLoggedIn,
     user,
-    googleAuthUrl,
     GEMINI_API_KEY
   } = useLoaderData<{
-    isLoggedIn: boolean;
     user?: User;
-    googleAuthUrl?: string;
     GEMINI_API_KEY: string;
   }>();
 
@@ -107,16 +101,6 @@ const Index = () => {
 
     await onAnalyzeReceipt(receiptData);
   };
-
-  if (!isLoggedIn) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <a href={googleAuthUrl} className="border-2 border-black rounded-md px-4 py-2">
-          Login with Google
-        </a>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center p-4">

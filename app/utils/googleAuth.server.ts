@@ -1,14 +1,18 @@
 import { redirect } from "@remix-run/node";
 import { google } from "googleapis";
-import { getSession, commitSession, destroySession } from "~/utils/session.server";
+import {
+  getSession,
+  commitSession,
+  destroySession,
+} from "~/utils/session.server";
 
-export const oauth2Client = new google.auth.OAuth2(
+const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI
 );
 
-export function getGoogleAuthUrl() {
+const getGoogleAuthUrl = () => {
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: [
@@ -17,14 +21,20 @@ export function getGoogleAuthUrl() {
       "https://www.googleapis.com/auth/drive.file",
     ],
   });
-}
+};
 
-export async function getGoogleUser(code: string) {
+const getGoogleUser = async (code: string) => {
   const { tokens } = await oauth2Client.getToken(code);
   oauth2Client.setCredentials(tokens);
 
-  const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
+  const oauth2 = google.oauth2({
+    version: "v2",
+    auth: oauth2Client,
+  });
   const { data } = await oauth2.userinfo.get();
+
+  console.log(tokens.refresh_token);
+
   return {
     email: data.email,
     name: data.name,
@@ -32,9 +42,9 @@ export async function getGoogleUser(code: string) {
     refreshToken: tokens.refresh_token,
     expiresAt: tokens.expiry_date,
   };
-}
+};
 
-export async function refreshGoogleToken(request: Request) {
+const refreshGoogleToken = async (request: Request) => {
   const session = await getSession(request.headers.get("Cookie"));
   const user = session.get("user");
 
@@ -71,9 +81,9 @@ export async function refreshGoogleToken(request: Request) {
       headers: { "Set-Cookie": await destroySession(session) },
     });
   }
-}
+};
 
-export async function getValidAccessToken(request: Request) {
+const getValidAccessToken = async (request: Request) => {
   const session = await getSession(request.headers.get("Cookie"));
   const user = session.get("user");
 
@@ -89,5 +99,11 @@ export async function getValidAccessToken(request: Request) {
   }
 
   return user.accessToken;
-}
+};
 
+export {
+  getGoogleAuthUrl,
+  getGoogleUser,
+  refreshGoogleToken,
+  getValidAccessToken
+};

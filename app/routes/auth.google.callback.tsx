@@ -14,6 +14,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   try {
     const user = await getGoogleUser(code);
+    console.log(user);
     const session = await getSession(request.headers.get("Cookie"));
     session.set("user", user);
 
