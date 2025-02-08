@@ -18,6 +18,7 @@ const prompt = `
 1. the date might be in the format of YYYY-MM-DD, mm/dd/yy, mm/dd/yyyy, etc. You should recognize the date and format it as YYYY-MM-DD
 2. you do not need to tell me all the subtotal, tax, and tip, just give me the description of the item and the total price of the transaction.
 3. you can read the receipt again and again, until you are sure about the information.
+4. your response should not include characters other than English letters, and numbers, and spaces.
 
 ** Please give me the date, item, and price in json format: **
 
@@ -72,7 +73,7 @@ const useGemini = (GEMINI_API_KEY: string) => {
   const onAnalyzeReceipt = async (receiptData: ImageData[]) => {
     setIsLoading(true);
     const client = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     const imageParts = receiptData.map((image) => ({
       inlineData: {
@@ -95,7 +96,10 @@ const useGemini = (GEMINI_API_KEY: string) => {
         }
 
         const parsedText = text.replace("```json", "").replace("```", "");
+        console.log(parsedText);
         const json = parseJson(parsedText);
+
+        console.log(json);
 
         if (json) {
           setReceiptInfo({
@@ -116,8 +120,13 @@ const useGemini = (GEMINI_API_KEY: string) => {
 
   const parseJson = (text: string) => {
     try {
-      return JSON.parse(text);
+      // Replace single quotes with double quotes and ensure property names are properly quoted
+      const formattedText = text.trim()
+        .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, "\"$2\":")  // Properly quote property names
+        .replace(/'/g, "\"");  // Replace any remaining single quotes with double quotes
+      return JSON.parse(formattedText);
     } catch (error) {
+      console.error("JSON parsing error:", error);
       return null;
     }
   };
